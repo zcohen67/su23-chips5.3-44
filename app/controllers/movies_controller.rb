@@ -1,5 +1,5 @@
 class MoviesController < ApplicationController
-    #before_action :force_index_redirect, only: [:index]
+    before_action :force_index_redirect, only: [:index]
 
     def show
       id = params[:id] # retrieve movie ID from URI route
@@ -12,6 +12,8 @@ class MoviesController < ApplicationController
       @all_ratings = Movie.all_ratings
       @ratings_to_show = ratings_hash
       @sort_by = sort_by
+      session['ratings'] = ratings_list
+      session['sort_by'] = @sort_by
     end
   
     def new
@@ -50,15 +52,15 @@ class MoviesController < ApplicationController
     end
 
     def force_index_redirect
-      if !params.key?(:ratings)
+      if !params.key?(:ratings) || !params.key?(:sort_by)
         flash.keep
-        url = movies_path(ratings: ratings_hash)
+        url = movies_path(sort_by: sort_by, ratings: ratings_hash)
         redirect_to url
       end
     end
 
     def ratings_list
-      params[:ratings]&.keys || Movie.all_ratings
+      params[:ratings]&.keys || session[:ratings] || Movie.all_ratings
     end
 
     def ratings_hash
@@ -66,7 +68,7 @@ class MoviesController < ApplicationController
     end
 
     def sort_by
-      params[:sort_by]
+      params[:sort_by] || session[:sort_by] || 'id'
     end
 
   end
