@@ -1,4 +1,5 @@
 class MoviesController < ApplicationController
+    #before_action :force_index_redirect, only: [:index]
 
     def show
       id = params[:id] # retrieve movie ID from URI route
@@ -7,7 +8,9 @@ class MoviesController < ApplicationController
     end
   
     def index
-      @movies = Movie.all
+      @movies = Movie.with_ratings(ratings_list)
+      @all_ratings = Movie.all_ratings
+      @ratings_to_show = ratings_hash
     end
   
     def new
@@ -44,4 +47,21 @@ class MoviesController < ApplicationController
     def movie_params
       params.require(:movie).permit(:title, :rating, :description, :release_date)
     end
+
+    def force_index_redirect
+      if !params.key?(:ratings)
+        flash.keep
+        url = movies_path(ratings: ratings_hash)
+        redirect_to url
+      end
+    end
+
+    def ratings_list
+      params[:ratings]&.keys || Movie.all_ratings
+    end
+
+    def ratings_hash
+      Hash[ratings_list.collect { |item| [item, "1"] }]
+    end
+
   end
